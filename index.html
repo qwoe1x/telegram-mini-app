@@ -2,22 +2,19 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>YouTube Mini App</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        html, body {
-            height: 100%;
-            overflow-x: hidden;
-            position: fixed;
-            width: 100%;
         }
 
         body {
@@ -25,92 +22,92 @@
             background: var(--tg-theme-bg-color, #0f0f0f);
             color: var(--tg-theme-text-color, #ffffff);
             padding: 10px;
-            padding-bottom: env(safe-area-inset-bottom);
-            padding-top: env(safe-area-inset-top);
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            min-height: 100vh;
         }
 
         .container {
             max-width: 100%;
             margin: 0 auto;
-            min-height: calc(100vh - 20px);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 10px;
-            padding: 12px;
+            margin-bottom: 15px;
+            padding: 15px;
             background: linear-gradient(135deg, #ff0000, #cc0000);
             border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+            position: relative;
         }
 
-        .header h1 {
-            color: white;
+        .user-info {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 15px;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 15px 0;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-number {
             font-size: 20px;
-            margin-bottom: 3px;
+            font-weight: bold;
+            color: #ff0000;
         }
 
-        .header p {
-            font-size: 13px;
-            opacity: 0.9;
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.8;
         }
 
         .search-container {
-            margin-bottom: 12px;
+            margin-bottom: 15px;
             display: flex;
             gap: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 10px;
             border-radius: 10px;
-            backdrop-filter: blur(10px);
         }
 
         .search-input {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             border: 2px solid transparent;
-            border-radius: 6px;
-            font-size: 14px;
-            background: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            font-size: 15px;
+            background: rgba(255,255,255,0.9);
             color: #000;
-            transition: all 0.3s ease;
-            -webkit-appearance: none;
-            -webkit-border-radius: 6px;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #ff0000;
-            box-shadow: 0 0 8px rgba(255, 0, 0, 0.3);
         }
 
         .search-btn {
-            padding: 10px 15px;
+            padding: 12px 18px;
             background: linear-gradient(135deg, #ff0000, #cc0000);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 15px;
             font-weight: bold;
-            transition: transform 0.2s ease;
-            -webkit-appearance: none;
-            touch-action: manipulation;
-        }
-
-        .search-btn:active {
-            transform: scale(0.95);
         }
 
         .video-container {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border-radius: 12px;
-            padding: 12px;
+            padding: 15px;
             margin-bottom: 15px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .video-wrapper {
@@ -130,61 +127,103 @@
             height: 100%;
             border: none;
             border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
 
         .video-info {
-            margin-top: 12px;
-            padding: 12px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 8px;
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 10px;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .action-btn {
+            padding: 8px 15px;
+            background: rgba(255,0,0,0.2);
+            color: white;
+            border: 1px solid #ff0000;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            background: rgba(255,0,0,0.4);
+        }
+
+        .action-btn.liked {
+            background: #ff0000;
+        }
+
+        .history-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #ff0000;
             text-align: center;
         }
 
-        .video-title {
-            font-size: 15px;
-            font-weight: bold;
-            color: #ffffff;
-            margin-bottom: 6px;
-            line-height: 1.3;
+        .history-list {
+            display: grid;
+            gap: 10px;
         }
 
-        .video-stats {
+        .history-item {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .history-item:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .history-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .history-date {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(255,255,255,0.6);
         }
 
         .popular-videos {
-            margin-top: 15px;
-        }
-
-        .popular-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            text-align: center;
-            color: #ff0000;
+            margin-top: 20px;
         }
 
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
+            gap: 12px;
         }
 
         .video-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             border-radius: 10px;
-            padding: 10px;
+            padding: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            touch-action: manipulation;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
-        .video-card:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.1);
+        .video-card:hover {
+            background: rgba(255,255,255,0.1);
         }
 
         .video-thumbnail {
@@ -198,24 +237,6 @@
             justify-content: center;
             color: #ff0000;
             font-size: 24px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .video-thumbnail::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, transparent 30%, rgba(255, 0, 0, 0.1) 50%, transparent 70%);
-            animation: shine 3s infinite;
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
         }
 
         .video-card-title {
@@ -224,241 +245,264 @@
             line-height: 1.2;
             color: #ffffff;
             margin-bottom: 4px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
         }
 
         .video-card-info {
             font-size: 10px;
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(255,255,255,0.6);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255,255,255,0.7);
         }
 
         .error-message {
             background: linear-gradient(135deg, #ff1744, #d50000);
             color: white;
-            padding: 12px;
-            border-radius: 8px;
-            margin: 8px 0;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
             text-align: center;
-            box-shadow: 0 4px 15px rgba(255, 23, 68, 0.3);
-            font-size: 14px;
         }
 
-        .placeholder {
-            text-align: center;
-            padding: 30px 15px;
-            color: rgba(255, 255, 255, 0.7);
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 12px;
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-        }
-
-        .placeholder h3 {
-            color: #ff0000;
-            margin-bottom: 8px;
-            font-size: 16px;
-        }
-
-        .placeholder p {
-            font-size: 13px;
-            line-height: 1.4;
-        }
-
-        .placeholder code {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 4px;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-
-        .control-buttons {
-            display: flex;
-            gap: 8px;
-            margin-top: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .control-btn {
-            padding: 6px 12px;
-            background: rgba(255, 0, 0, 0.2);
-            color: white;
-            border: 1px solid #ff0000;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.3s ease;
-            touch-action: manipulation;
-            -webkit-appearance: none;
-        }
-
-        .control-btn:active {
-            background: rgba(255, 0, 0, 0.4);
-            transform: scale(0.95);
-        }
-
-        /* Мобільні налаштування */
         @media (max-width: 600px) {
-            body {
-                padding: 8px;
-            }
-            
             .search-container {
                 flex-direction: column;
-                gap: 6px;
-            }
-            
-            .search-input, .search-btn {
-                width: 100%;
             }
             
             .video-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
             
-            .header h1 {
-                font-size: 18px;
+            .video-actions {
+                flex-wrap: wrap;
             }
-            
-            .header p {
-                font-size: 12px;
-            }
-        }
-
-        @supports (-webkit-touch-callout: none) {
-            body {
-                -webkit-overflow-scrolling: touch;
-                position: fixed;
-                overflow: hidden;
-            }
-            
-            .container {
-                overflow-y: auto;
-                -webkit-overflow-scrolling: touch;
-                height: 100vh;
-            }
-        }
-
-        .container::-webkit-scrollbar {
-            display: none;
-        }
-        
-        .container {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
+            <div id="userInfo" class="user-info">Завантаження...</div>
             <h1>📺 YouTube Player</h1>
-            <p>Дивіться відео прямо в Telegram</p>
+            <p>З хмарним збереженням</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <div id="totalVideos" class="stat-number">0</div>
+                <div class="stat-label">Відео</div>
+            </div>
+            <div class="stat">
+                <div id="totalLikes" class="stat-number">0</div>
+                <div class="stat-label">Лайків</div>
+            </div>
+            <div class="stat">
+                <div id="totalViews" class="stat-number">0</div>
+                <div class="stat-label">Переглядів</div>
+            </div>
         </div>
 
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" 
-                   placeholder="ID відео або посилання..."
-                   autocomplete="off"
-                   autocorrect="off"
-                   autocapitalize="off"
-                   spellcheck="false">
+                   placeholder="ID відео або посилання YouTube...">
             <button onclick="loadVideo()" class="search-btn">▶️ Грати</button>
         </div>
 
         <div id="videoContainer" class="video-container" style="display: none;">
             <div class="video-wrapper">
                 <iframe id="videoFrame" class="video-frame" 
-                        src=""
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen>
                 </iframe>
             </div>
             <div id="videoInfo" class="video-info">
-                <div id="videoTitle" class="video-title">Завантажується...</div>
-                <div id="videoStats" class="video-stats">YouTube Player • Telegram Mini App</div>
-                <div class="control-buttons">
-                    <button class="control-btn" onclick="openInYoutube()">🔗 Відкрити в YouTube</button>
+                <div id="videoTitle">Завантажується...</div>
+                <div class="video-actions">
+                    <button id="likeBtn" class="action-btn" onclick="toggleLike()">❤️ Лайк</button>
+                    <button class="action-btn" onclick="shareVideo()">📤 Поділитися</button>
+                    <button class="action-btn" onclick="addToPlaylist()">📝 В плейліст</button>
                 </div>
             </div>
         </div>
 
-        <div id="placeholder" class="placeholder">
-            <h3>🎬 Введіть ID відео або посилання</h3>
-            <p>Наприклад: <code>dQw4w9WgXcQ</code><br>
-            або <code>https://youtube.com/watch?v=dQw4w9WgXcQ</code></p>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="loading" class="loading" style="display: none;">🔄 Завантаження...</div>
+
+        <div class="history-section">
+            <h2 class="section-title">📜 Історія переглядів</h2>
+            <div id="historyList" class="history-list">
+                <div class="loading">Завантаження історії...</div>
+            </div>
         </div>
 
-        <div id="errorMessage" class="error-message" style="display: none;"></div>
-
         <div class="popular-videos">
-            <h2 class="popular-title">🔥 Популярні відео</h2>
-            <div class="video-grid">
-                <div class="video-card" onclick="loadVideoById('dQw4w9WgXcQ', 'Rick Astley - Never Gonna Give You Up')">
-                    <div class="video-thumbnail">🎵</div>
-                    <div class="video-card-title">Rick Astley - Never Gonna Give You Up</div>
-                    <div class="video-card-info">1.4B переглядів</div>
-                </div>
-                <div class="video-card" onclick="loadVideoById('9bZkp7q19f0', 'PSY - GANGNAM STYLE')">
-                    <div class="video-thumbnail">🐎</div>
-                    <div class="video-card-title">PSY - GANGNAM STYLE</div>
-                    <div class="video-card-info">4.8B переглядів</div>
-                </div>
-                <div class="video-card" onclick="loadVideoById('kJQP7kiw5Fk', 'Luis Fonsi - Despacito')">
-                    <div class="video-thumbnail">🎤</div>
-                    <div class="video-card-title">Luis Fonsi - Despacito</div>
-                    <div class="video-card-info">8.2B переглядів</div>
-                </div>
-                <div class="video-card" onclick="loadVideoById('fJ9rUzIMcZQ', 'Queen – Bohemian Rhapsody')">
-                    <div class="video-thumbnail">👑</div>
-                    <div class="video-card-title">Queen – Bohemian Rhapsody</div>
-                    <div class="video-card-info">1.9B переглядів</div>
-                </div>
-                <div class="video-card" onclick="loadVideoById('60ItHLz5WEA', 'Alan Walker - Faded')">
-                    <div class="video-thumbnail">🎧</div>
-                    <div class="video-card-title">Alan Walker - Faded</div>
-                    <div class="video-card-info">3.4B переглядів</div>
-                </div>
-                <div class="video-card" onclick="loadVideoById('JGwWNGJdvx8', 'Ed Sheeran - Shape of You')">
-                    <div class="video-thumbnail">🎼</div>
-                    <div class="video-card-title">Ed Sheeran - Shape of You</div>
-                    <div class="video-card-info">6.0B переглядів</div>
-                </div>
+            <h2 class="section-title">🔥 Популярні відео</h2>
+            <div class="video-grid" id="popularGrid">
             </div>
         </div>
     </div>
 
     <script>
+            const firebaseConfig = {
+            apiKey: "AIzaSyBtK1lHxHpzLzsWvc_hU0scfQiLkNd60pc",
+            authDomain: "telegram--app.firebaseapp.com",
+            projectId: "telegram--app",
+            storageBucket: "telegram--app.firebasestorage.app",
+            messagingSenderId: "242560633686",
+            appId: "1:242560633686:web:676fa6baab73dc7eee24f7"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
         let tg = window.Telegram.WebApp;
         tg.ready();
         tg.expand();
-        
-        tg.disableClosingConfirmation();
-        
-        tg.enableClosingConfirmation = function() {};
 
+        let currentUser = null;
         let currentVideoId = null;
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.getElementById('searchInput');
+        function initUser() {
+            const user = tg.initDataUnsafe?.user;
+            if (user) {
+                currentUser = user;
+                document.getElementById('userInfo').textContent = 
+                    `${user.first_name} ${user.last_name || ''}`;
+                
+                auth.signInAnonymously().then(() => {
+                    loadUserData();
+                    loadHistory();
+                    loadPopularVideos();
+                }).catch(console.error);
+            }
+        }
+
+        function loadUserData() {
+            if (!currentUser) return;
             
-            searchInput.addEventListener('focus', function(e) {
-                e.preventDefault();
-                setTimeout(() => {
-                    tg.expand();
-                }, 100);
+            const userRef = database.ref(`users/${currentUser.id}`);
+            userRef.once('value', (snapshot) => {
+                const data = snapshot.val() || {
+                    totalVideos: 0,
+                    totalLikes: 0,
+                    totalViews: 0
+                };
+                
+                document.getElementById('totalVideos').textContent = data.totalVideos || 0;
+                document.getElementById('totalLikes').textContent = data.totalLikes || 0;
+                document.getElementById('totalViews').textContent = data.totalViews || 0;
+            });
+        }
+
+        function saveToHistory(videoId, title) {
+            if (!currentUser) return;
+            
+            const historyRef = database.ref(`users/${currentUser.id}/history`);
+            const newHistoryRef = historyRef.push();
+            
+            newHistoryRef.set({
+                videoId: videoId,
+                title: title,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                date: new Date().toLocaleDateString('uk-UA')
             });
             
-            searchInput.addEventListener('blur', function() {
-                setTimeout(() => {
-                    tg.expand();
-                }, 100);
+            updateUserStats('totalVideos', 1);
+            updateUserStats('totalViews', 1);
+        }
+
+        function updateUserStats(field, increment) {
+            if (!currentUser) return;
+            
+            const userRef = database.ref(`users/${currentUser.id}/${field}`);
+            userRef.transaction((current) => {
+                return (current || 0) + increment;
             });
             
-            searchInput.blur();
-        });
+            setTimeout(loadUserData, 500);
+        }
+
+        function loadHistory() {
+            if (!currentUser) return;
+            
+            const historyRef = database.ref(`users/${currentUser.id}/history`);
+            historyRef.orderByChild('timestamp').limitToLast(10).once('value', (snapshot) => {
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '';
+                
+                const items = [];
+                snapshot.forEach((child) => {
+                    items.unshift(child.val());
+                });
+                
+                if (items.length === 0) {
+                    historyList.innerHTML = '<div class="loading">Історія порожня</div>';
+                    return;
+                }
+                
+                items.forEach((item) => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <div class="history-title">${item.title}</div>
+                        <div class="history-date">${item.date}</div>
+                    `;
+                    historyItem.onclick = () => loadVideoById(item.videoId, item.title);
+                    historyList.appendChild(historyItem);
+                });
+            });
+        }
+
+        function loadPopularVideos() {
+            const popularRef = database.ref('videos/popular');
+            popularRef.once('value', (snapshot) => {
+                const popularGrid = document.getElementById('popularGrid');
+                popularGrid.innerHTML = '';
+                
+                const videos = snapshot.val() || getDefaultVideos();
+                
+                Object.entries(videos).forEach(([id, video]) => {
+                    const videoCard = document.createElement('div');
+                    videoCard.className = 'video-card';
+                    videoCard.innerHTML = `
+                        <div class="video-thumbnail">${video.emoji}</div>
+                        <div class="video-card-title">${video.title}</div>
+                        <div class="video-card-info">${video.views} переглядів</div>
+                    `;
+                    videoCard.onclick = () => loadVideoById(id, video.title);
+                    popularGrid.appendChild(videoCard);
+                });
+            });
+        }
+
+        function getDefaultVideos() {
+            return {
+                'dQw4w9WgXcQ': {
+                    title: 'Rick Astley - Never Gonna Give You Up',
+                    emoji: '🎵',
+                    views: '1.4B'
+                },
+                '9bZkp7q19f0': {
+                    title: 'PSY - GANGNAM STYLE',
+                    emoji: '🐎',
+                    views: '4.8B'
+                },
+                'kJQP7kiw5Fk': {
+                    title: 'Luis Fonsi - Despacito',
+                    emoji: '🎤',
+                    views: '8.2B'
+                },
+                'fJ9rUzIMcZQ': {
+                    title: 'Queen – Bohemian Rhapsody',
+                    emoji: '👑',
+                    views: '1.9B'
+                }
+            };
+        }
 
         function extractVideoId(url) {
             const patterns = [
@@ -479,8 +523,6 @@
             const input = document.getElementById('searchInput');
             const videoId = extractVideoId(input.value.trim());
             
-            input.blur();
-            
             if (!videoId) {
                 showError('❌ Невірний формат! Введіть ID відео або повне посилання');
                 return;
@@ -496,101 +538,133 @@
             const videoContainer = document.getElementById('videoContainer');
             const videoFrame = document.getElementById('videoFrame');
             const videoTitle = document.getElementById('videoTitle');
-            const placeholder = document.getElementById('placeholder');
             
-            videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${window.location.origin}`;
+            videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
             videoTitle.textContent = title;
             
             videoContainer.style.display = 'block';
-            placeholder.style.display = 'none';
             
-            videoContainer.scrollIntoView({ 
-                behavior: 'smooth', 
-                block: 'start' 
+            saveToHistory(videoId, title);
+            
+            updateVideoPopularity(videoId, title);
+            
+            checkIfLiked(videoId);
+        }
+
+        function toggleLike() {
+            if (!currentVideoId || !currentUser) return;
+            
+            const likeRef = database.ref(`users/${currentUser.id}/likes/${currentVideoId}`);
+            const likeBtn = document.getElementById('likeBtn');
+            
+            likeRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    likeRef.remove();
+                    likeBtn.classList.remove('liked');
+                    likeBtn.textContent = '❤️ Лайк';
+                    updateUserStats('totalLikes', -1);
+                } else {
+                    likeRef.set({
+                        timestamp: firebase.database.ServerValue.TIMESTAMP,
+                        videoId: currentVideoId
+                    });
+                    likeBtn.classList.add('liked');
+                    likeBtn.textContent = '💖 Лайкнуто';
+                    updateUserStats('totalLikes', 1);
+                }
             });
+        }
+
+        function checkIfLiked(videoId) {
+            if (!currentUser) return;
             
-            document.getElementById('searchInput').value = videoId;
+            const likeRef = database.ref(`users/${currentUser.id}/likes/${videoId}`);
+            const likeBtn = document.getElementById('likeBtn');
             
-            setTimeout(() => {
-                tg.expand();
-            }, 500);
+            likeRef.once('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    likeBtn.classList.add('liked');
+                    likeBtn.textContent = '💖 Лайкнуто';
+                } else {
+                    likeBtn.classList.remove('liked');
+                    likeBtn.textContent = '❤️ Лайк';
+                }
+            });
+        }
+
+        function updateVideoPopularity(videoId, title) {
+            const videoRef = database.ref(`videos/stats/${videoId}`);
+            videoRef.transaction((current) => {
+                if (current) {
+                    current.views = (current.views || 0) + 1;
+                    return current;
+                } else {
+                    return {
+                        title: title,
+                        views: 1,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    };
+                }
+            });
+        }
+
+        function shareVideo() {
+            if (!currentVideoId) return;
             
-            if (tg.sendData) {
-                tg.sendData(JSON.stringify({
-                    action: 'video_loaded',
-                    videoId: videoId,
-                    title: title,
-                    timestamp: Date.now()
-                }));
+            const shareData = {
+                title: document.getElementById('videoTitle').textContent,
+                text: 'Подивіться це відео!',
+                url: `https://youtube.com/watch?v=${currentVideoId}`
+            };
+            
+            if (navigator.share) {
+                navigator.share(shareData);
+            } else if (tg.openLink) {
+                tg.openLink(`https://t.me/share/url?url=${shareData.url}&text=${shareData.text}`);
             }
         }
 
-        function openInYoutube() {
-            if (currentVideoId) {
-                const url = `https://youtube.com/watch?v=${currentVideoId}`;
-                if (tg.openLink) {
-                    tg.openLink(url);
-                } else {
-                    window.open(url, '_blank');
-                }
-            }
+        function addToPlaylist() {
+            if (!currentVideoId || !currentUser) return;
+            
+            const playlistRef = database.ref(`users/${currentUser.id}/playlist`);
+            const newPlaylistRef = playlistRef.push();
+            
+            newPlaylistRef.set({
+                videoId: currentVideoId,
+                title: document.getElementById('videoTitle').textContent,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            showMessage('✅ Додано в плейліст!');
         }
 
         function showError(message) {
             const errorDiv = document.getElementById('errorMessage');
             errorDiv.textContent = message;
             errorDiv.style.display = 'block';
-            setTimeout(hideError, 4000);
+            setTimeout(() => errorDiv.style.display = 'none', 4000);
         }
 
         function hideError() {
             document.getElementById('errorMessage').style.display = 'none';
         }
 
+        function showMessage(message) {
+            tg.showAlert(message);
+        }
+
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                e.preventDefault();
-                this.blur(); // Прибираємо фокус
-                setTimeout(() => {
-                    loadVideo();
-                }, 100);
+                loadVideo();
             }
         });
 
-        tg.onEvent('mainButtonClicked', function() {
-            loadVideo();
-        });
-
+        tg.onEvent('mainButtonClicked', loadVideo);
         tg.MainButton.text = '▶️ Завантажити відео';
         tg.MainButton.show();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const videoParam = urlParams.get('v');
-        if (videoParam) {
-            setTimeout(() => {
-                loadVideoById(videoParam, 'Відео з посилання');
-            }, 500);
-        }
-
-        window.addEventListener('resize', function() {
-            setTimeout(() => {
-                tg.expand();
-            }, 100);
-        });
-
-        let startY = 0;
-        document.addEventListener('touchstart', function(e) {
-            startY = e.touches[0].clientY;
-        });
-
-        document.addEventListener('touchmove', function(e) {
-            const currentY = e.touches[0].clientY;
-            const diffY = startY - currentY;
-            
-            if (diffY < -50 && startY < 100) {
-                e.preventDefault();
-            }
-        }, { passive: false });
+        document.addEventListener('DOMContentLoaded', initUser);
     </script>
 </body>
 </html>
