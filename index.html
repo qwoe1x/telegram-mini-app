@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Mini App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--tg-theme-bg-color, #0f0f0f);
+            color: var(--tg-theme-text-color, #ffffff);
+            padding: 10px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .search-container {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            font-size: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #000;
+            transition: all 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #ff0000;
+            box-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+        }
+
+        .search-btn {
+            padding: 12px 18px;
+            background: linear-gradient(135deg, #ff0000, #cc0000);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .video-container {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-frame {
+            width: 100%;
+            height: 300px;
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .video-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .video-stats {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .popular-videos {
+            margin-top: 20px;
+        }
+
+        .popular-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #ff0000;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 12px;
+        }
+
+        .video-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .video-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 0, 0, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 150px;
+            background: linear-gradient(135deg, #333, #111);
+            border-radius: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ff0000;
+            font-size: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-thumbnail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 0, 0, 0.1) 50%, transparent 70%);
+            animation: shine 3s infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .video-card-title {
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.3;
+            color: #ffffff;
+            margin-bottom: 5px;
+        }
+
+        .video-card-info {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .error-message {
+            background: linear-gradient(135deg, #ff1744, #d50000);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(255, 23, 68, 0.3);
+        }
+
+        .placeholder {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+        }
+
+        .placeholder h3 {
+            color: #ff0000;
+            margin-bottom: 10px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .control-btn {
+            padding: 8px 15px;
+            background: rgba(255, 0, 0, 0.2);
+            color: white;
+            border: 1px solid #ff0000;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 0, 0, 0.4);
+        }
+
+        @media (max-width: 600px) {
+            .video-frame {
+                height: 220px;
+            }
+            
+            .search-container {
+                flex-direction: column;
+            }
+            
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📺 YouTube Player</h1>
+            <p>Дивіться відео прямо в Telegram</p>
+        </div>
+
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" 
+                   placeholder="ID відео або посилання YouTube...">
+            <button onclick="loadVideo()" class="search-btn">▶️ Грати</button>
+        </div>
+
+        <div id="videoContainer" class="video-container" style="display: none;">
+            <iframe id="videoFrame" class="video-frame" 
+                    src=""
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen>
+            </iframe>
+            <div id="videoInfo" class="video-info">
+                <div id="videoTitle" class="video-title">Завантажується...</div>
+                <div id="videoStats" class="video-stats">YouTube Player • Telegram Mini App</div>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="toggleFullscreen()">🔍 Повний екран</button>
+                    <button class="control-btn" onclick="openInYoutube()">🔗 Відкрити в YouTube</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="placeholder" class="placeholder">
+            <h3>🎬 Введіть ID відео або посилання</h3>
+            <p>Наприклад: <code>dQw4w9WgXcQ</code><br>
+            або <code>https://youtube.com/watch?v=dQw4w9WgXcQ</code></p>
+        </div>
+
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+        <div class="popular-videos">
+            <h2 class="popular-title">🔥 Популярні відео</h2>
+            <div class="video-grid">
+                <div class="video-card" onclick="loadVideoById('dQw4w9WgXcQ', 'Rick Astley - Never Gonna Give You Up')">
+                    <div class="video-thumbnail">🎵</div>
+                    <div class="video-card-title">Rick Astley - Never Gonna Give You Up</div>
+                    <div class="video-card-info">Rick Astley • 1.4B переглядів</div>
+                </div>
+                <div class="video-card" onclick="loadVideoById('9bZkp7q19f0', 'PSY - GANGNAM STYLE')">
+                    <div class="video-thumbnail">🐎</div>
+                    <div class="video-card-title">PSY - GANGNAM STYLE</div>
+                    <div class="video-card-info">officialpsy • 4.8B переглядів</div>
+                </div>
+                <div class="video-card" onclick="loadVideoById('kJQP7kiw5Fk', 'Luis Fonsi - Despacito')">
+                    <div class="video-thumbnail">🎤</div>
+                    <div class="video-card-title">Luis Fonsi - Despacito ft. Daddy Yankee</div>
+                    <div class="video-card-info">LuisFonsiVEVO • 8.2B переглядів</div>
+                </div>
+                <div class="video-card" onclick="loadVideoById('fJ9rUzIMcZQ', 'Queen – Bohemian Rhapsody')">
+                    <div class="video-thumbnail">👑</div>
+                    <div class="video-card-title">Queen – Bohemian Rhapsody</div>
+                    <div class="video-card-info">Queen Official • 1.9B переглядів</div>
+                </div>
+                <div class="video-card" onclick="loadVideoById('60ItHLz5WEA', 'Alan Walker - Faded')">
+                    <div class="video-thumbnail">🎧</div>
+                    <div class="video-card-title">Alan Walker - Faded</div>
+                    <div class="video-card-info">Alan Walker • 3.4B переглядів</div>
+                </div>
+                <div class="video-card" onclick="loadVideoById('JGwWNGJdvx8', 'Ed Sheeran - Shape of You')">
+                    <div class="video-thumbnail">🎼</div>
+                    <div class="video-card-title">Ed Sheeran - Shape of You</div>
+                    <div class="video-card-info">Ed Sheeran • 6.0B переглядів</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        let currentVideoId = null;
+
+        function extractVideoId(url) {
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+                /^[a-zA-Z0-9_-]{11}$/
+            ];
+            
+            for (let pattern of patterns) {
+                const match = url.match(pattern);
+                if (match) {
+                    return match[1] || match[0];
+                }
+            }
+            return null;
+        }
+
+        function loadVideo() {
+            const input = document.getElementById('searchInput');
+            const videoId = extractVideoId(input.value.trim());
+            
+            if (!videoId) {
+                showError('❌ Невірний формат! Введіть ID відео або повне посилання');
+                return;
+            }
+
+            loadVideoById(videoId, 'Завантажене відео');
+        }
+
+        function loadVideoById(videoId, title) {
+            hideError();
+            
+            currentVideoId = videoId;
+            const videoContainer = document.getElementById('videoContainer');
+            const videoFrame = document.getElementById('videoFrame');
+            const videoTitle = document.getElementById('videoTitle');
+            const placeholder = document.getElementById('placeholder');
+            
+            videoFrame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+            videoTitle.textContent = title;
+            
+            videoContainer.style.display = 'block';
+            placeholder.style.display = 'none';
+            
+            videoContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+            
+            document.getElementById('searchInput').value = videoId;
+            
+            if (tg.sendData) {
+                tg.sendData(JSON.stringify({
+                    action: 'video_loaded',
+                    videoId: videoId,
+                    title: title,
+                    timestamp: Date.now()
+                }));
+            }
+        }
+
+        function toggleFullscreen() {
+            const videoFrame = document.getElementById('videoFrame');
+            if (videoFrame.requestFullscreen) {
+                videoFrame.requestFullscreen();
+            } else if (videoFrame.webkitRequestFullscreen) {
+                videoFrame.webkitRequestFullscreen();
+            } else if (videoFrame.msRequestFullscreen) {
+                videoFrame.msRequestFullscreen();
+            }
+        }
+
+        function openInYoutube() {
+            if (currentVideoId) {
+                const url = `https://youtube.com/watch?v=${currentVideoId}`;
+                if (tg.openLink) {
+                    tg.openLink(url);
+                } else {
+                    window.open(url, '_blank');
+                }
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(hideError, 4000);
+        }
+
+        function hideError() {
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadVideo();
+            }
+        });
+
+        tg.onEvent('mainButtonClicked', function() {
+            loadVideo();
+        });
+
+        tg.MainButton.text = '▶️ Завантажити відео';
+        tg.MainButton.show();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoParam = urlParams.get('v');
+        if (videoParam) {
+            loadVideoById(videoParam, 'Відео з посилання');
+        }
+    </script>
+</body>
+</html>
